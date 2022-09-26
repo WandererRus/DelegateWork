@@ -1,46 +1,91 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Threading;
 
 namespace DelegateWork
 {
-    delegate void DelegateWorkDelegate(string a);
+    delegate void DelegateWorkDelegate();    
     internal class Program
     {
         static void Main(string[] args)
         {
-            string[] massiveFiles = new string[10] {"first.doc", "second.doc", "third.txt", "four.pdf", "five.xlsx", "six.txt",
-           "seven.pdf", "eight.xlsx","nine.csv","ten.csv"};
+            List<AnyDocument> list = new List<AnyDocument>() { 
+                new AnyDocument("First", "pdf"), 
+                new AnyDocument("First", "doc"),
+                new AnyDocument("First", "txt"),
+                new AnyDocument("First", "xslx"),
+                new AnyDocument("First", "csv"),
+            };
+            WorkWithDocuments wwd = new WorkWithDocuments();            
             DelegateWorkDelegate dwd = null;
-            foreach (string file in massiveFiles)
+            foreach (AnyDocument file in list)
             {
                 dwd = null;
-                string[] filemassiv = file.Split('.');
-                switch (filemassiv[1]) 
-                {
-                    case "doc": dwd += OutInfoDOC; dwd(file); break;
-                    case "txt": dwd += OutInfoTXT; dwd(file); break;
-                    case "pdf": dwd += OutInfoPDF; dwd(file); break;
-                    case "xlsx": dwd += OutInfoXLSX; dwd(file); break;
-                    case "csv": dwd += OutInfoCSV; dwd(file); break;
-                        default:Console.WriteLine("Что-то пошло не так");break;
-                }
+                dwd += WorkWithDocuments.OutInfoDOC;
+                file.ChangeType("doc");
+                wwd.DocumentsToDOC(dwd);                
             }
+            wwd.Start();
         }
-        static void OutInfoDOC(string a) {
-            Console.WriteLine("Это документ MS Word ({0})",a);
+        
+    }
+    class AnyDocument 
+    { 
+        public string Name { get; set; }
+        public string Type { get; set; }
+
+        public AnyDocument(string name, string type) 
+        {
+            Name = name;
+            Type = type;
         }
-        static void OutInfoTXT(string a)
+        public void ChangeType(string newType)
+        {
+            Type = newType;
+        }
+
+        public override string ToString() 
+        {
+            return Name + "." + Type;
+        }
+    }
+    class WorkWithDocuments 
+    {
+        event DelegateWorkDelegate DelegateEvent;
+
+        public void DocumentsToDOC(DelegateWorkDelegate dwd) 
+        {
+            if(dwd != null)
+            {
+                DelegateEvent += dwd;
+            }
+            
+        }
+        public void Start ()
+        {
+            if (DelegateEvent != null)
+            {
+                DelegateEvent.Invoke();
+            }
+
+        }
+        public static void OutInfoDOC()
+        {
+            Console.WriteLine("Это документ ворд");
+        }
+        public static void OutInfoTXT(string a)
         {
             Console.WriteLine("Это документ текстовый ({0})", a);
         }
-        static void OutInfoPDF(string a)
+        public static void OutInfoPDF(string a)
         {
             Console.WriteLine("Это документ PDF ({0})", a);
         }
-        static void OutInfoXLSX(string a)
+        public static void OutInfoXLSX(string a)
         {
             Console.WriteLine("Это документ MS Excel ({0})", a);
         }
-        static void OutInfoCSV(string a)
+        public static void OutInfoCSV(string a)
         {
             Console.WriteLine("Это документ текстовый с разделителем ({0})", a);
         }
